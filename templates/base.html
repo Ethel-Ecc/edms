@@ -23,9 +23,24 @@
 
 <body>
 {% include '_incs/_navbar.html' %}
+
 <main role="main" class="container">
   <div class="row">
     <div class="col-md-8">
+        {% with messages= get_flashed_messages(with_categories=true) %}
+
+           {% if messages %}
+
+               {% for category, message in messages %}
+                   <div class="alert alert-{{ category }}">
+                        {{ message }}
+                   </div>
+               {% endfor %}
+
+           {% endif %}
+
+        {% endwith %}
+
     <!-- This content block can be overridden by data from your custom pages -->
         {% block content %}
 
@@ -33,13 +48,14 @@
     </div>
     <div class="col-md-4">
       <div class="content-section">
-        <h3>Our Sidebar</h3>
-        <p class='text-muted'>You can put any information here you'd like.
+        <h5>Source dataset using ckan-wit</h5>
+          <p class='text-muted'>
+              <small>Installing the ckan-wit package into this CMS provides the add-on benefit of the source-dataset below</small>
           <ul class="list-group">
-            <li class="list-group-item list-group-item-light">Latest Posts</li>
-            <li class="list-group-item list-group-item-light">Announcements</li>
-            <li class="list-group-item list-group-item-light">Calendars</li>
-            <li class="list-group-item list-group-item-light">etc</li>
+            <li class="list-group-item list-group-item-light"><a href="pages/ckan-wit/europe.html"> Europe's Datasets </a></li>
+            <li class="list-group-item list-group-item-light"><a href="pages/ckan-wit/europe.html"> America's Datasets  </a> </li>
+            <li class="list-group-item list-group-item-light"><a href="pages/ckan-wit/europe.html"> Africa's Datasets  </a></li>
+            <li class="list-group-item list-group-item-light"><a href="pages/ckan-wit/europe.html"> Asia's Datasets  </a></li>
           </ul>
         </p>
       </div>

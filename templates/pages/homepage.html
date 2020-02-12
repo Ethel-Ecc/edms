@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Enterprise Dataset Management System</h2>
+    <hr>
+    {% for dataset in datasets %}
+        <article class="media content-section">
+          <div class="media-body">
+            <div class="article-metadata">
+                <small class="text-muted"> Owner: </small> <a class="mr-2" href="#"> {{ dataset.owner }}</a>
+                <small class="text-muted">Date added: {{ dataset.date_added }}</small>
+            </div>
+            <h2><a class="article-title" href="#">{{ dataset.name_or_title }}</a></h2>
+              <p class="article-content"><small class="text-muted">Format: </small> {{ dataset.format }}</p>
+              <p class="article-content"><small class="text-muted">Description: </small> {{ dataset.description }}</p>
+              <p class="article-content"><small class="text-muted">Download URL: </small> {{ dataset.download_url }}</p>
+          </div>
+        </article>
+    {% endfor %}
+{% endblock content %}
+
