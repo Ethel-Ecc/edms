@@ -2,7 +2,8 @@
 {% block content %}
     <h2>Enterprise Dataset Management System</h2>
     <hr>
-    {% for dataset in datasets %}
+
+    {% for dataset in dataset_test %}
         <article class="media content-section">
           <div class="media-body">
             <div class="article-metadata">
@@ -16,5 +17,6 @@
           </div>
         </article>
     {% endfor %}
+
 {% endblock content %}
 
