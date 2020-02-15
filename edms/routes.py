@@ -3,6 +3,7 @@ from edms import app, db, bcrypt
 from edms.forms import NewUserRegistrationForm, UserLoginForm, UserUpdateAccount, AddDataset
 from edms.models import User, Dataset
 from flask_login import login_user, current_user, logout_user, login_required
+from ckan_wit.src import wit_main
 
 
 
@@ -108,7 +109,6 @@ def user_login():
 
             return redirect(next_page) if next_page else redirect(url_for('homepage'))  # this is ternary conditional
 
-
         flash('Login was Unsuccessful. Please recheck your Email and Password', 'danger')
 
     return render_template('pages/user_login.html', title='User Login', form=form)
@@ -141,7 +141,6 @@ def user_account():
                            form=form
                            )
 
-
 # the add dataset routes
 @app.route('/add_dataset', methods=['GET', 'POST'])
 def add_dataset():
@@ -155,20 +154,17 @@ def add_dataset():
     This route and method handles the contents of the europe page
     :returns The ckan-wit web page for each continent
 """
-
-
 @app.route('/ckan-wit/europe')
 def europe():
     continent = "Europe's Dataset"
-    return render_template('pages/ckan-wit/europe.html', title=f'{continent}')
+    wit_europe = wit_main.verify_acquire()
+    return render_template('pages/ckan-wit/europe.html', title=f'{continent}', wit_europe=wit_europe)
 
 
 """
     This route and method handles the contents of the America page
     :returns The ckan-wit web page for each continent
 """
-
-
 @app.route('/ckan-wit/americas')
 def america():
     continent = "America's Dataset"

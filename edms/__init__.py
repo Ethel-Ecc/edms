@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from ckan_wit.src import wit_main
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'f3b540e068213b34df30c333454d0b31'
@@ -13,7 +14,7 @@ bcrypt = Bcrypt(app)  # used for user authentication
 login_manager = LoginManager(app)  # this is used to handle user login session
 login_manager.login_view = 'user_login'
 login_manager.login_message_category = 'info'
-
+wit_res = wit_main.ckan_wit_main()
 
 
 from edms import routes
