@@ -1,5 +1,6 @@
 from datetime import datetime
-from edms import db, login_manager
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from edms import db, login_manager, app
 from flask_login import UserMixin
 
 
@@ -12,6 +13,8 @@ def load_user(user_id):
 """
     A dataset list of dictionaries, where each dictionary represents a single dataset
 """
+
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
@@ -20,13 +23,23 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(70), nullable=False)
     datasets = db.relationship('Dataset', backref='owner', lazy=True)
 
+    def get_reset_token(self, expires_secs=1800):
+        s = Serializer(app.config['SECRET_KEY'], expires_secs)
+        return s.dumps({
+            'user_id': self.id
+        }).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
+
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.user_avatar}')"
-
-
-# user_1 = User(username='user1', email='user1@user1.com', password='user1user1')
-# user_2 = User(username='user2', email='user2@user2.com', password='user2user2')
-# user_3 = User(username='user3', email='user3@user3.com', password='user3user3')
 
 
 class Dataset(db.Model):

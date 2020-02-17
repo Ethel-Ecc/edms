@@ -7,43 +7,93 @@
             {{ form.hidden_tag() }} <!-- This handles the CSRF with respect to forms -->
 
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Add new dataset</legend>
-
+                <legend class="border-bottom mb-4">{{ legend }}</legend>
                 <!-- This name_or_title div -->
                 <div class="form-group">
                     {{ form.name_or_title.label(class='form-control-label') }}
-                    {{ form.name_or_title(class='form-control form-control.lg') }}
+                     {% if form.name_or_title.errors %}
+                        {{ form.name_or_title(class='form-control form-control.lg is-invalid') }}
+                        <div class="invalid-feedback">
+                            {% for error in form.name_or_title.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.name_or_title(class='form-control form-control.lg') }}
+                    {% endif %}
                 </div>
 
                 <!-- This distribution_license div -->
                 <div class="form-group">
                     {{ form.distribution_license.label(class='form-control-label') }}
-                    {{ form.distribution_license(class='form-control form-control.lg') }}
+                     {% if form.distribution_license.errors %}
+                        {{ form.distribution_license(class='form-control form-control.lg is-invalid') }}
+                        <div class="invalid-feedback">
+                            {% for error in form.distribution_license.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.distribution_license(class='form-control form-control.lg') }}
+                    {% endif %}
                 </div>
 
                 <!-- This format div -->
                 <div class="form-group">
                     {{ form.format.label(class='form-control-label') }}
-                    {{ form.format(class='form-control form-control.lg') }}
+                     {% if form.format.errors %}
+                        {{ form.format(class='form-control form-control.lg is-invalid') }}
+                        <div class="invalid-feedback">
+                            {% for error in form.format.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.format(class='form-control form-control.lg') }}
+                    {% endif %}
                 </div>
 
                 <!-- This description div -->
                 <div class="form-group">
                     {{ form.description.label(class='form-control-label') }}
-                    {{ form.description(class='form-control form-control.lg') }}
+                     {% if form.description.errors %}
+                        {{ form.description(class='form-control form-control.lg is-invalid') }}
+                        <div class="invalid-feedback">
+                            {% for error in form.description.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.description(class='form-control form-control.lg') }}
+                    {% endif %}
                 </div>
 
-                <!-- This download_url div -->
-                <div class="form-group">
+                 <!-- This download_url div -->
+                <hr style="border-color: #000080">
+                 <div class="form-group">
                     {{ form.download_url.label(class='form-control-label') }}
-                    {{ form.download_url(class='form-control form-control.lg') }}
+                     {% if form.download_url.errors %}
+                        {{ form.download_url(class='form-control form-control.lg is-invalid') }}
+                        <div class="invalid-feedback">
+                            {% for error in form.download_url.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.download_url(class='form-control form-control.lg') }}
+                    {% endif %}
                 </div>
-
-                <!-- This download_url div -->
-                <div class="form-group">
-                    {{ form.download_url.label(class='form-control-label') }}
-                    {{ form.download_url(class='form-control form-control.lg') }}
+{#                <div class="form-group">
+                  {{ form.download_url.label(class='form-control-label') }}
+                    {{ form.download_url(class='form-control-file') }}
+                    {% if form.download_url.errors %}
+                        {% for error in form.download_url.errors %}
+                                <span class="text-danger"> {{ error }} </span> <br>
+                        {% endfor %}
+                    {% endif %}
                 </div>
+#}
+                <hr style="border-color: #000080">
 
             </fieldset>
 

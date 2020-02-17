@@ -1,50 +1,27 @@
-from flask import render_template, url_for, flash, redirect, request
-from edms import app, db, bcrypt
-from edms.forms import NewUserRegistrationForm, UserLoginForm, UserUpdateAccount, AddDataset
+import os
+import secrets
+from PIL import Image
+from flask import render_template, url_for, flash, redirect, request, abort
+from edms import app, db, bcrypt, mail
+from edms.forms import NewUserRegistrationForm, UserLoginForm, UserUpdateAccountForm, AddDatasetForm, RequestPasswordResetForm, PasswordResetForm
 from edms.models import User, Dataset
 from flask_login import login_user, current_user, logout_user, login_required
+from flask_mail import Message
 from ckan_wit.src import wit_main
 
-
-
-dataset_test = [
-    {
-        'owner': 'Ethelbert Obinna',
-        'name_or_title':'Dataset 1',
-        'distribution_license': 'MIT',
-        'format': 'PDF',
-        'description': 'A population dataset for county X, NRW',
-        'download_url': 'https://ckan-wit-documentation.readthedocs.io/_/downloads/en/latest/pdf/',
-        'date_added': '23 February, 2020'
-    },
-    {
-        'owner': 'Markus Lindner',
-        'name_or_title': 'Dataset 2',
-        'distribution_license': 'Open Source',
-        'format': 'HTML',
-        'description': 'Dataset for students experiments, Göttingen',
-        'download_url': 'https://ckan-wit-documentation.readthedocs.io/en/latest',
-        'date_added': '20 August, 2020'
-    },
-    {
-        'owner': 'Sven Bingert',
-        'name_or_title': 'Dataset 3',
-        'distribution_license': 'Python Package',
-        'format': 'PyPI',
-        'description': 'CKAN-WIT: An API Wrapper for CKAN Open Data Portals',
-        'download_url': 'https://test.pypi.org/project/ckan-wit/',
-        'date_added': '12 April, 2020'
-    },
-]
 
 """
     This route and method handles the contents of the landing/homepage
     :returns The homepage using the contents from the home page templates
 """
+
+
 @app.route('/')
 @app.route('/homepage')
 def homepage():
-    return render_template('pages/homepage.html', dataset_test=dataset_test)
+    page = request.args.get('page', 1, type=int)
+    datasets = Dataset.query.order_by(Dataset.date_added.desc()).paginate(page=page, per_page=1)
+    return render_template('pages/homepage.html', datasets=datasets)
 
 
 """
@@ -120,32 +97,201 @@ def user_logout():
     return redirect(url_for('homepage'))
 
 
+# This allows handling the user profile image.
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, pic_file_ext = os.path.splitext(form_picture.filename)
+    picture_filename = random_hex + pic_file_ext
+    picture_path = os.path.join(app.root_path, 'static/img', picture_filename)
+    image_resize = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(image_resize)
+    i.save(picture_path)
+
+    return picture_filename
+
+
 @app.route('/user_account', methods=['GET', 'POST'])
 @login_required
 def user_account():
-    form = UserUpdateAccount()
+    form = UserUpdateAccountForm()
     if form.validate_on_submit():
+        if form.picture.data:
+            picture_file = save_picture(form.picture.data)
+            current_user.user_avatar = picture_file
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
-        flash('Account successfully updated!', 'success')
+        flash('Your account has been successfully updated!', 'success')
         return redirect(url_for('user_account'))
+
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
 
     user_avatar = url_for('static', filename='img/' + current_user.user_avatar)
-    return render_template('pages/user_account.html',
-                           title='user account',
-                           user_avatar=user_avatar,
-                           form=form
+
+    return render_template('pages/user_account.html', title='user account', user_avatar=user_avatar, form=form)
+
+
+# This method handles the dataset option
+def save_dataset(form_dataset):
+    random_hex = secrets.token_hex(8)
+    _, dataset_ext = os.path.splitext(form_dataset.filename)
+    dataset_filename = random_hex + dataset_ext
+    dataset_path = os.path.join(app.root_path, 'static/datasets', dataset_filename)
+    form_dataset.save(dataset_path)
+
+    return dataset_filename
+
+
+# This handles add dataset routes
+@app.route('/dataset/add', methods=['GET', 'POST'])
+@login_required
+def add_dataset():
+    form = AddDatasetForm()
+    if form.validate_on_submit():
+        dataset_new = Dataset(
+            name_or_title=form.name_or_title.data,
+            distribution_license=form.distribution_license.data,
+            format=form.format.data,
+            description=form.description.data,
+            download_url=form.download_url.data,
+            owner=current_user
+        )
+        db.session.add(dataset_new)
+        db.session.commit()
+
+        flash('Dataset added successfully', 'success')
+
+        return redirect(url_for('homepage'))
+
+    return render_template('pages/add_dataset.html',
+                           title='Add Dataset',
+                           form=form,
+                           legend='Add new dataset')
+
+
+# This handles each dataset via its id
+@app.route('/dataset/details/<int:dataset_id>')
+def dataset_details(dataset_id):
+    dataset = Dataset.query.get_or_404(dataset_id)
+    return render_template('pages/dataset.html', title=dataset.name_or_title, dataset=dataset)
+
+
+# This handles each dataset via its id for updating.
+@app.route('/dataset/details/<int:dataset_id>/update', methods=['GET', 'POST'])
+@login_required
+def dataset_update(dataset_id):
+    dataset = Dataset.query.get_or_404(dataset_id)
+    if dataset.owner != current_user:
+        abort(403)
+    form = AddDatasetForm()
+
+    if form.validate_on_submit():
+        dataset.name_or_title = form.name_or_title.data
+        dataset.distribution_license = form.distribution_license.data
+        dataset.format = form.format.data
+        dataset.description = form.description.data
+        dataset.download_url = form.download_url.data
+
+        db.session.commit()
+
+        flash('dataset successfully updated', 'success')
+        return redirect(url_for('dataset_details', dataset_id=dataset_id))
+
+    elif request.method == 'GET':
+        form.name_or_title.data = dataset.name_or_title,
+        form.distribution_license.data = dataset.distribution_license,
+        form.format.data = dataset.format,
+        form.description.data = dataset.description
+        form.download_url.data = dataset.download_url
+
+    return render_template('pages/add_dataset.html',
+                           title='Update Dataset',
+                           form=form,
+                           legend='Update Dataset'
                            )
 
-# the add dataset routes
-@app.route('/add_dataset', methods=['GET', 'POST'])
-def add_dataset():
-    form = AddDataset()
-    return render_template('pages/add_dataset.html', title='Add Dataset', form=form)
+
+@app.route('/dataset/<int:dataset_id>/delete', methods=['POST'])
+@login_required
+def delete_dataset(dataset_id):
+    dataset = Dataset.query.get_or_404(dataset_id)
+    if dataset.owner != current_user:
+        abort(403)
+
+    db.session.delete(dataset)
+    db.session.commit()
+    flash('The dataset has been deleted successfully', 'success')
+    return redirect(url_for('homepage'))
+
+
+# show only user specific post
+@app.route('/user/<string:username>')
+def user_datasets(username):
+    page = request.args.get('page', 1, type=int)
+    user = User.query.filter_by(username=username).first_or_404()
+
+    datasets = Dataset.query.filter_by(owner=user)\
+        .order_by(Dataset.date_added.desc())\
+        .paginate(page=page, per_page=1)
+
+    return render_template('pages/user_datasets.html', datasets=datasets, user=user)
+
+
+## handles user email and password reset
+def send_reset_email(user):
+    token = user.get_reset_token(),
+    msg = Message('Password Reset Request',
+                  sender='noreply@edms.com',
+                  recipients=[user.email],
+                  )
+    msg.body = f''' To reset your password, use this link {url_for('reset_password', token=token, _external=True)}
+If you did not make this request, simply ignore this message and no changes will be made
+'''
+    mail.send(msg)
+
+
+@app.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('homepage'))
+    form = RequestPasswordResetForm()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('An email has been sent with instructions to reset your password', 'info')
+        return redirect(url_for('user_login'))
+
+    return render_template('pages/reset_password_request.html', title='request password reset', form=form)
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('homepage'))
+
+    user = User.verify_reset_token(token)
+
+    if user is None:
+        flash('The token is invalid or expired.', 'warning')
+        return redirect(url_for('reset_password_request'))
+
+    form = PasswordResetForm()
+
+    if form.validate_on_submit():
+        new_user_hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = new_user_hashed_password
+        db.session.commit()
+
+        flash(f'Password successfully updated. You are now able to log in', 'success')
+        return redirect(url_for('user_login'))
+    return render_template('pages/reset_password.html', title='Reset password', form=form)
+
+
+
 
 
 
@@ -154,17 +300,21 @@ def add_dataset():
     This route and method handles the contents of the europe page
     :returns The ckan-wit web page for each continent
 """
+
+
 @app.route('/ckan-wit/europe')
 def europe():
     continent = "Europe's Dataset"
-    wit_europe = wit_main.verify_acquire()
-    return render_template('pages/ckan-wit/europe.html', title=f'{continent}', wit_europe=wit_europe)
+    # wit_europe = wit_main.verify_acquire()
+    return render_template('pages/ckan-wit/europe.html', title=f'{continent}')
 
 
 """
-    This route and method handles the contents of the America page
+    # This route and method handles the contents of the America page
     :returns The ckan-wit web page for each continent
 """
+
+
 @app.route('/ckan-wit/americas')
 def america():
     continent = "America's Dataset"
@@ -193,4 +343,3 @@ def africa():
 def asia():
     continent = "Asia's Dataset"
     return render_template('pages/ckan-wit/asia.html', title=f'{continent}')
-
