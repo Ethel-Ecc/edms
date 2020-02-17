@@ -282,12 +282,12 @@ def reset_password(token):
     form = PasswordResetForm()
 
     if form.validate_on_submit():
-        new_user_hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user.password = new_user_hashed_password
+        new_hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = new_hashed_password
         db.session.commit()
-
         flash(f'Password successfully updated. You are now able to log in', 'success')
         return redirect(url_for('user_login'))
+
     return render_template('pages/reset_password.html', title='Reset password', form=form)
 
 
