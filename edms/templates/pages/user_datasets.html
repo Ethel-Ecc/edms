@@ -9,10 +9,10 @@
           <div class="media-body">
             <div class="article-metadata">
                 <small class="text-muted"> Owner: </small>
-                <a class="mr-2" href="{{url_for('user_datasets', username=dataset.owner.username)}}"> {{ dataset.owner.username }}</a>
+                <a class="mr-2" href="{{url_for('users.user_datasets', username=dataset.owner.username)}}"> {{ dataset.owner.username }}</a>
                 <small class="text-muted">Date added: {{ dataset.date_added.strftime('%Y-%m-%d') }}</small>
             </div>
-            <h2><a class="article-title" href="{{ url_for('dataset_details', dataset_id=dataset.id) }}">{{ dataset.name_or_title }}</a></h2>
+            <h2><a class="article-title" href="{{ url_for('datasets.dataset_details', dataset_id=dataset.id) }}">{{ dataset.name_or_title }}</a></h2>
               <p class="article-content"><small class="text-muted">Format: </small> {{ dataset.format }}</p>
               <p class="article-content"><small class="text-muted">Description: </small> {{ dataset.description }}</p>
               <p class="article-content"><small class="text-muted">Download URL: </small> {{ dataset.download_url }}</p>
@@ -24,10 +24,10 @@
     {% for page_number in datasets.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
         {% if page_number %}
             {% if datasets.page == page_number %}
-                <a href="{{ url_for('user_datasets', username=user.username, page=page_number) }}"
+                <a href="{{ url_for('users.user_datasets', username=user.username, page=page_number) }}"
                    class="btn btn-primary btn-sm mb-4">{{ page_number }}</a>
             {% else %}
-                <a href="{{ url_for('user_datasets', username=user.username, page=page_number) }}"
+                <a href="{{ url_for('users.user_datasets', username=user.username, page=page_number) }}"
                    class="btn btn-outline-primary btn-sm mb-4">{{ page_number }}</a>
             {% endif %}
         {% else %}

@@ -3,4 +3,17 @@
     <h1>Europe's Dataset</h1>
 
     {{ wit_europe }}
+
 {% endblock content %}
+
+{% block javascript %}
+    {{ super() }}
+    <script>
+        if (localStorage.getItem("wit-europe-dataset") === null) {
+            alert("Metadata is being loaded . . .");
+
+        } else {
+            alert('Loading complete.')
+        }
+    </script>
+{% endblock javascript %}

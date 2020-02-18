@@ -11,7 +11,7 @@
                 </div>
                   {% if dataset.owner == current_user %}
                       <div>
-                          <a href="{{ url_for('dataset_update', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm mt-1 mb-1">Update</a>
+                          <a href="{{ url_for('datasets.dataset_update', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm mt-1 mb-1">Update</a>
                           <button class="btn-outline-danger btn-sm m-1" data-toggle="modal" data-target="#deletemodal">Delete</button>
                       </div>
                   {% endif %}
@@ -36,9 +36,9 @@
                      Once you delete a dataset, there is no going back. Please be certain.</p>
                   </div>
                   <div class="modal-footer">
-                    <a href="{{ url_for('dataset_update', dataset_id=dataset.id) }}"
+                    <a href="{{ url_for('datasets.dataset_update', dataset_id=dataset.id) }}"
                        type="btn" class="btn btn-outline-primary" data-dismiss="modal">Cancel</a>
-                      <form action="{{ url_for('delete_dataset', dataset_id=dataset.id) }}" method="post">
+                      <form action="{{ url_for('datasets.delete_dataset', dataset_id=dataset.id) }}" method="post">
                           <input type="submit" class="btn btn-outline-danger" value="Delete permanently">
                       </form>
 

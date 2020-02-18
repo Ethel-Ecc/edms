@@ -1,32 +1,44 @@
-import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
-from ckan_wit.src import wit_main
+from edms.cfg import Config
+from ckan_wit.src import wit_main as m
 
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'f3b540e068213b34df30c333454d0b31'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///edms.db'  # The /// are a relative path from this current file.
-# It means the edms.db file should be created along side this python module we are currently in.
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)  # this creates an SQLAlchemy database instance.
-bcrypt = Bcrypt(app)  # used for user authentication
-login_manager = LoginManager(app)  # this is used to handle user login session
-login_manager.login_view = 'user_login'
+db = SQLAlchemy()  # this creates an SQLAlchemy database instance.
+bcrypt = Bcrypt()  # used for user authentication
+
+login_manager = LoginManager()  # this is used to handle user login session
+login_manager.login_view = 'users.user_login'
 login_manager.login_message_category = 'info'
-app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
 
-app.config['MAIL_USERNAME'] = 'ethel.christos@gmail.com'
-app.config['MAIL_PASSWORD'] = '!!!Excellence2019AMEN...'
-# app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
-# app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
-mail = Mail(app)
-wit_res = wit_main.ckan_wit_main()
+mail = Mail()
+wit_res = m.ckan_wit_main()
 
-from edms import routes
 
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(Config)
+
+    db.__init__(app)
+    bcrypt.__init__(app)
+    login_manager.__init__(app)
+    login_manager.__init__(app)
+    login_manager.__init__(app)
+    mail.__init__(app)
+
+    from edms.users.routes import users
+    from edms.datasets.routes import datasets
+    from edms.main.routes import main
+    from edms.wit.routes import wit
+    from edms.errors.handlers import errors
+
+    app.register_blueprint(users)
+    app.register_blueprint(datasets)
+    app.register_blueprint(main)
+    app.register_blueprint(wit)
+    app.register_blueprint(errors)
+
+    return app
