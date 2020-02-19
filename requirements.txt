@@ -9,7 +9,7 @@ cchardet==2.1.5
 certifi==2019.11.28
 cffi==1.14.0
 chardet==3.0.4
-ckan-wit==0.1.4
+ckan-wit==0.1.5
 Click==7.0
 Flask==1.1.1
 Flask-Bcrypt==0.7.1
