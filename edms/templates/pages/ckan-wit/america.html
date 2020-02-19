@@ -1,5 +1,54 @@
 {% extends 'base.html' %}
+{% block styles %}
+    {{ super() }}
+     <style>
+        .inline-block-child {
+            display: inline-block;
+        }
+        .child {
+            padding: 1rem;
+            margin-right: 2rem;
+        }
+     .card-body:hover{
+         background-color:lightgray ;
+     }
+
+    </style>
+{% endblock styles %}
 {% block content %}
-    <h1>America's Dataset</h1>
-    {{ wit_america }}
+    <h1 class="mb-2">America's Dataset</h1>
+    <hr>
+    <p><small>Total: <strong>{{ wit_america['total_metadata'] }}</strong> </small></p>
+
+    {% for value in main_metas %}
+
+     <div class="card border-primary mb-3 child inline-block-child" style="max-width: 18rem;">
+            <div class="card-header">
+                <small class="text-muted">Owner: <strong> {{value['wit_resources'].name.upper() }}</strong> </small>
+            </div>
+            <div class="card-body">
+                    <p class="card-title">
+                        <small class="text-muted">Format: <strong> {{value['wit_resources'].file_format}}</strong> </small><br>
+                        <small class="text-muted">Distribution License: <strong> {{value.license}}</strong></small>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">DownloadURL:<a href="{{value['wit_resources'].download_link}}">{{value['wit_resources']
+                                .download_link|urlize(50, target='_blank')}}</a></small>
+                    </p>
+                    <p class="card-text"><small class="text-muted">Description: {{value.owner_description}} </small></p>
+            </div>
+    </div>
+
+    {% endfor%}
 {% endblock content %}
+
+{% block javascript %}
+    {{ super() }}
+    <script>
+
+    if (localStorage.getItem("wit-europe-metadata") == null) {
+         localStorage.setItem("wit-europe-metadata",{{wit_america|tojson}});
+    }
+
+    </script>
+{% endblock javascript %}
